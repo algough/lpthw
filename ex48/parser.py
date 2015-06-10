@@ -3,11 +3,15 @@ class ParserError(Exception):
 
 class Sentence(object):
 
-	def __init__(self, subject, verb, obj):
-		# converting ('word_type', 'noun') tuples
+	def __init__(self, subject, verb, number, obj):
+		# converting ('word_type', 'word') tuples
 		self.subject = subject[1]
 		self.verb = verb[1]
+		self.number = number[1]
 		self.object = obj[1]
+
+	def to_tuple(self):
+		return (self.subject, self.verb, self.number, self.object)
 
 def peek(word_list):
 	if word_list:
@@ -61,10 +65,32 @@ def parse_subject(word_list):
 	else:
 		raise ParserError("Expected a verb next.")
 
+def parse_number(word_list):
+	skip(word_list, 'stop')
+	
+	if peek(word_list) == 'number':
+		return match(word_list, 'number')
+	else:
+		return ('number', 1)
+
 def parse_sentence(word_list):
-	subj = parse_subject(word_list)
-	verb = parse_verb(word_list)
-	obj = parse_object(word_list)
+	skip(word_list, 'stop')
 
-	return Sentence(subj, verb, obj)	
+	start = peek(word_list)
 
+	if start == 'noun':
+		subj = parse_subject(word_list)
+		verb = parse_verb(word_list)
+		number = parse_number(word_list)
+		obj = parse_object(word_list)
+		return Sentence(subj, verb, number, obj)
+   
+	elif start == 'verb':
+		subj = parse_subject(word_list)
+		verb = parse_verb(word_list)
+		number = parse_number(word_list)
+		obj = parse_object(word_list)
+		return Sentence(subj, verb, number, obj)
+
+	else:
+		raise ParserError("Must start with noun or verb, not: %s" % start)
